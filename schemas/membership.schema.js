@@ -2,14 +2,14 @@ import mongoose from "mongoose";
 
 const membershipSchema = new mongoose.Schema(
   {
-    owner: {
+    userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: [true, "User required for membership"],
       index: true,
     },
 
-    company: {
+    companyId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Company",
       required: [true, "Company required"],
@@ -18,6 +18,7 @@ const membershipSchema = new mongoose.Schema(
     roleInCompany: {
       type: String,
       enum: ["owner", "admin", "member"],
+      required: true,
       default: "member",
     },
     status: {
@@ -32,5 +33,7 @@ const membershipSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+membershipSchema.index({ companyId: 1, userId: 1 }, { unique: true });
 
 export const Membership = mongoose.model("Membership", membershipSchema);

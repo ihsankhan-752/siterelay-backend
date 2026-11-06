@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const companySchema = new mongoose.Schema(
   {
-    owner: {
+    ownerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: [true, "Owner required"],
