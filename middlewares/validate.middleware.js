@@ -2,7 +2,7 @@ import { asyncHandler } from "../utils/async.handler.js";
 import ErrorHandler from "../utils/error.handler.js";
 
 export const validateMiddleware = (schema) => {
-  asyncHandler(async (req, res, next) => {
+  return asyncHandler(async (req, res, next) => {
     const result = await schema.safeParseAsync(req.body);
 
     if (!result.success) {
