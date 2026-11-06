@@ -11,7 +11,7 @@ export const validateMiddleware = (schema) => {
         message: issue.message,
       }));
 
-      return next(new ErrorHandler(errors, 400));
+      return next(new ErrorHandler("Validation failed", 400, errors));
     }
 
     req.body = result.data;
