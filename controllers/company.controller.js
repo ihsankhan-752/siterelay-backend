@@ -4,7 +4,6 @@ import { Company } from "../schemas/company.schema.js";
 import { Membership } from "../schemas/membership.schema.js";
 import { generateSlug } from "../utils/generate.slug.js";
 import mongoose from "mongoose";
-import { success } from "zod";
 
 export const createCompany = asyncHandler(async (req, res, next) => {
   const { name } = req.body;
