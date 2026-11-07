@@ -1,0 +1,6 @@
+import { z } from "zod";
+
+export const invitationValidatorSchema = z.object({
+  email: z.string().trim().toLowerCase().email("User email required"),
+  role: z.enum(["admin", "member"]).default("member"),
+});
