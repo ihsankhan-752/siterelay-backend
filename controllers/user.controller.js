@@ -36,6 +36,7 @@ export const login = asyncHandler(async (req, res, next) => {
   const payload = {
     _id: user._id,
     role: user.role,
+    email: user.email,
   };
 
   const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "7d" });

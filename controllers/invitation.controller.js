@@ -2,9 +2,11 @@ import { Company } from "../schemas/company.schema.js";
 import { Invitation } from "../schemas/invitation.schema.js";
 import { Membership } from "../schemas/membership.schema.js";
 import { User } from "../schemas/user.schema.js";
+import crypto from "crypto";
 import { asyncHandler } from "../utils/async.handler.js";
 import ErrorHandler from "../utils/error.handler.js";
 import { generateInvitationToken } from "../utils/generate.invitation.token.js";
+import { sendEmailForInvitation } from "../services/resend.email.services.js";
 
 export const createInvitation = asyncHandler(async (req, res) => {
   const { cId } = req.params;
@@ -14,10 +16,11 @@ export const createInvitation = asyncHandler(async (req, res) => {
   const company = await Company.findById(cId);
 
   if (!company || company.status !== "active") {
-    throw new ErrorHandler("No Company Exist", 404);
+    throw new ErrorHandler("Company not found or inactive", 404);
   }
 
   const companyId = company._id;
+
   const membershipCheck = await Membership.findOne({
     companyId,
     userId,
@@ -55,28 +58,65 @@ export const createInvitation = asyncHandler(async (req, res) => {
 
   if (existingInvitation) {
     throw new ErrorHandler(
-      "An active invitation already exist for this email",
+      "An active invitation already exists for this email",
       409,
     );
   }
 
   const token = generateInvitationToken();
+
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
   const invitation = await Invitation.create({
-    companyId: companyId,
+    companyId,
     email,
-    role: role,
+    role,
     tokenHash: token.tokenHash,
     invitedBy: userId,
-    expiresAt: expiresAt,
+    expiresAt,
+  });
+
+  const frontendUrl = process.env.FRONTEND_URL;
+
+  if (!frontendUrl) {
+    throw new ErrorHandler("Invitation frontend URL is not configured", 500);
+  }
+
+  const invitationUrl = new URL("/accept-invitation", frontendUrl);
+
+  invitationUrl.searchParams.set("token", token.rawToken);
+
+  const emailResult = await sendEmailForInvitation({
+    userEmail: email,
+    role,
+    invitationUrl: invitationUrl.toString(),
+    companyName: company.name,
   });
 
   return res.status(201).json({
     success: true,
+    message: "Invitation created successfully",
     response: {
       email: invitation.email,
       role: invitation.role,
+      expiresAt: invitation.expiresAt,
+      emailSent: emailResult.success,
     },
   });
+});
+
+export const acceptInvitation = asyncHandler(async (req, res) => {
+  const { token } = req.body;
+
+  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+  const invitation = await Invitation.findOne({ tokenHash: hashedToken });
+
+  if (!invitation) {
+    throw new ErrorHandler("Invalid or expired invitation", 404);
+  }
+
+  if (invitation.status !== "pending" || invitation.expiresAt <= new Date()) {
+    throw new ErrorHandler("Invalid or expired invitation", 404);
+  }
 });
