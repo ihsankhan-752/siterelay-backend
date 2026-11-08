@@ -7,7 +7,8 @@ import { asyncHandler } from "../utils/async.handler.js";
 import ErrorHandler from "../utils/error.handler.js";
 import { generateInvitationToken } from "../utils/generate.invitation.token.js";
 import { sendEmailForInvitation } from "../services/resend.email.services.js";
-
+import mongoose from "mongoose";
+import { success } from "zod";
 export const createInvitation = asyncHandler(async (req, res) => {
   const { cId } = req.params;
   const { role, email } = req.body;
@@ -118,5 +119,59 @@ export const acceptInvitation = asyncHandler(async (req, res) => {
 
   if (invitation.status !== "pending" || invitation.expiresAt <= new Date()) {
     throw new ErrorHandler("Invalid or expired invitation", 404);
+  }
+
+  if (req.user.email !== invitation.email) {
+    throw new ErrorHandler("Invited email does'nt Match", 403);
+  }
+
+  const session = await mongoose.startSession();
+  try {
+    session.startTransaction();
+
+    await Membership.create(
+      [
+        {
+          userId: req.user._id,
+          status: "active",
+          roleInCompany: invitation.role,
+          companyId: invitation.companyId,
+        },
+      ],
+      { session },
+    );
+
+    const invitationId = { _id: invitation._id, status: "pending" };
+
+    const updatedDoc = {
+      $set: {
+        status: "accepted",
+        acceptedAt: new Date(),
+      },
+    };
+
+    const invitationResult = await Invitation.updateOne(
+      invitationId,
+      updatedDoc,
+      { session },
+    );
+
+    if (invitationResult.modifiedCount !== 1) {
+      throw new ErrorHandler("Invitation Aborted", 404);
+    }
+
+    await session.commitTransaction();
+
+    return res.status(200).json({
+      success: true,
+      message: "Invitation Accepted",
+    });
+  } catch (e) {
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
+    throw e;
+  } finally {
+    await session.endSession();
   }
 });
