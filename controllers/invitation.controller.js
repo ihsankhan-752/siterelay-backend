@@ -117,6 +117,8 @@ export const acceptInvitation = asyncHandler(async (req, res) => {
     throw new ErrorHandler("Invalid or expired invitation", 404);
   }
 
+  console.log("Test Working");
+
   if (invitation.status !== "pending" || invitation.expiresAt <= new Date()) {
     throw new ErrorHandler("Invalid or expired invitation", 404);
   }
