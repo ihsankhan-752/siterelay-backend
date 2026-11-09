@@ -8,7 +8,7 @@ import ErrorHandler from "../utils/error.handler.js";
 import { generateInvitationToken } from "../utils/generate.invitation.token.js";
 import { sendEmailForInvitation } from "../services/resend.email.services.js";
 import mongoose from "mongoose";
-import { success } from "zod";
+
 export const createInvitation = asyncHandler(async (req, res) => {
   const { cId } = req.params;
   const { role, email } = req.body;
