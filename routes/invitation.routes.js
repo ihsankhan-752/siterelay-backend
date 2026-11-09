@@ -1,7 +1,10 @@
 import express from "express";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
 import { validateMiddleware } from "../middlewares/validate.middleware.js";
-import { invitationValidatorSchema } from "../validators/invitation.validator.js";
+import {
+  invitationValidatorSchema,
+  acceptTokenValidatorSchema,
+} from "../validators/invitation.validator.js";
 import {
   createInvitation,
   acceptInvitation,
@@ -16,11 +19,10 @@ router.post(
   createInvitation,
 );
 
-
 router.post(
-  "/:cId/invitations/",
+  "/accept",
   authMiddleware,
-  validateMiddleware(invitationValidatorSchema),
+  validateMiddleware(acceptTokenValidatorSchema),
   acceptInvitation,
 );
 

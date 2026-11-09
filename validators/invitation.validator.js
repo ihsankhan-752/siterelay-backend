@@ -6,5 +6,5 @@ export const invitationValidatorSchema = z.object({
 });
 
 export const acceptTokenValidatorSchema = z.object({
-  token: z.string(),
+  token: z.string().min(1, "Validation Token is required"),
 });
