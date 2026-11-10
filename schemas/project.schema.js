@@ -4,12 +4,13 @@ const projectSchema = new mongoose.Schema(
   {
     companyId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "company",
+      ref: "Company",
       required: true,
     },
     name: {
       type: String,
       required: [true, "Project name required"],
+      trim: true,
     },
     description: {
       type: String,
@@ -17,10 +18,10 @@ const projectSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["planning", "active", "onHold", "completed", "archive"],
+      enum: ["planning", "active", "onHold", "completed", "archived"],
       default: "planning",
     },
-    startData: {
+    startDate: {
       type: Date,
       required: [true, "Project Starting date required"],
     },
@@ -31,5 +32,7 @@ const projectSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+projectSchema.index({ companyId: 1, status: 1 });
 
 export const Project = mongoose.model("Project", projectSchema);
