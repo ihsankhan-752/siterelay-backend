@@ -43,3 +43,30 @@ export const createProject = asyncHandler(async (req, res) => {
     .status(201)
     .json({ success: true, message: "Project created successfully", project });
 });
+
+export const getCompanyProjects = asyncHandler(async (req, res) => {
+  const { cId } = req.params;
+
+  const userId = req.user._id;
+
+  const company = await Company.findById(cId);
+  if (!company || company.status !== "active") {
+    throw new ErrorHandler("Company did not exist", 404);
+  }
+
+  const membership = await Membership.findOne({
+    userId,
+    companyId: company._id,
+    status: "active",
+  });
+
+  if (!membership) {
+    throw new ErrorHandler("No active membership found", 403);
+  }
+
+  const projects = await Project.find({ companyId: cId }).sort({
+    startDate: 1,
+  });
+
+  return res.status(200).json({ success: true, projects });
+});
