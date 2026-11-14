@@ -1,3 +1,4 @@
+import { success } from "zod";
 import { Company } from "../schemas/company.schema.js";
 import { Membership } from "../schemas/membership.schema.js";
 import { ProjectMembership } from "../schemas/project.membership.schema.js";
@@ -69,12 +70,11 @@ export const addMemberToProject = asyncHandler(async (req, res) => {
   }
 
   const projectMembership = await ProjectMembership.create({
-    userId:existingUser._id,
+    userId: existingUser._id,
     companyId: company._id,
     projectId: project._id,
     addedBy: user._id,
     role: role,
-
   });
 
   return res.status(201).json({
@@ -82,4 +82,44 @@ export const addMemberToProject = asyncHandler(async (req, res) => {
     message: "User added to project",
     projectMembership,
   });
+});
+
+export const getProjectMembers = asyncHandler(async (req, res) => {
+  const { cId, pId } = req.params;
+
+  const loggedInUser = req.user._id;
+
+  const company = await Company.findOne({ _id: cId, status: "active" });
+
+  if (!company) {
+    throw new ErrorHandler("Company doesn't exist or is inactive", 404);
+  }
+
+  const membership = await Membership.findOne({
+    companyId: company._id,
+    status: "active",
+    userId: loggedInUser,
+  });
+
+  if (!membership) {
+    throw new ErrorHandler("No membership exist", 403);
+  }
+
+  const project = await Project.findOne({
+    _id: pId,
+    companyId: company._id,
+    status: "active",
+  });
+
+  if (!project) {
+    throw new ErrorHandler("No project exist", 404);
+  }
+
+  const projectMembers = await ProjectMembership.find({
+    projectId: project._id,
+    status: "active",
+  }).populate("userId", "username email status");
+
+
+  return res.status(200).json({success: true, members: projectMembers})
 });
