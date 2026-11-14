@@ -38,7 +38,7 @@ export const addMemberToProject = asyncHandler(async (req, res) => {
 
   const project = await Project.findOne({ _id: pId, companyId: company._id });
 
-  if (!project || project.status !== "active") {
+  if (!project || project.status !== "planning") {
     throw new ErrorHandler("Project doesn't exist", 404);
   }
 
@@ -108,7 +108,7 @@ export const getProjectMembers = asyncHandler(async (req, res) => {
   const project = await Project.findOne({
     _id: pId,
     companyId: company._id,
-    status: "active",
+    status: "planning",
   });
 
   if (!project) {
@@ -120,6 +120,5 @@ export const getProjectMembers = asyncHandler(async (req, res) => {
     status: "active",
   }).populate("userId", "username email status");
 
-
-  return res.status(200).json({success: true, members: projectMembers})
+  return res.status(200).json({ success: true, members: projectMembers });
 });
