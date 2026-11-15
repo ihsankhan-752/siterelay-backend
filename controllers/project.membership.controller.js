@@ -141,8 +141,15 @@ export const removeMemberFromProject = asyncHandler(async (req, res) => {
     userId: loggedInUser,
   });
 
-  if (!membership) {
-    throw new ErrorHandler("No membership exist", 403);
+  if (
+    !membership ||
+    (membership.roleInCompany !== "owner" &&
+      membership.roleInCompany !== "admin")
+  ) {
+    throw new ErrorHandler(
+      "No membership exist or you are not authorized",
+      403,
+    );
   }
 
   const project = await Project.findOne({
@@ -176,4 +183,66 @@ export const removeMemberFromProject = asyncHandler(async (req, res) => {
   }
 
   return res.status(200).json({ success: true, message: "User Removed" });
+});
+
+export const updateUserMembership = asyncHandler(async (req, res) => {
+  const { cId, pId } = req.params;
+  const { userId, newRole } = req.body;
+
+  const loggedInUser = req.user._id;
+
+  const company = await Company.findOne({ _id: cId, status: "active" });
+
+  if (!company) {
+    throw new ErrorHandler("Company doesn't exist or is inactive", 404);
+  }
+
+  const membership = await Membership.findOne({
+    companyId: company._id,
+    status: "active",
+    userId: loggedInUser,
+  });
+
+  if (
+    !membership ||
+    (membership.roleInCompany !== "owner" &&
+      membership.roleInCompany !== "admin")
+  ) {
+    throw new ErrorHandler(
+      "No membership exist or you are not authorized",
+      403,
+    );
+  }
+
+  const project = await Project.findOne({
+    _id: pId,
+    companyId: company._id,
+    status: "planning",
+  });
+
+  if (!project) {
+    throw new ErrorHandler("No project exist", 404);
+  }
+
+  const requiredIdsForUpdation = {
+    userId: userId,
+    companyId: company._id,
+    projectId: project._id,
+    status: "active",
+  };
+
+  const updatedStatus = await ProjectMembership.updateOne(
+    requiredIdsForUpdation,
+    {
+      $set: {
+        role: newRole,
+      },
+    },
+  );
+
+  if (updatedStatus.matchedCount === 0) {
+    throw new ErrorHandler("Active project membership not found", 404);
+  }
+
+  return res.status(200).json({ success: true, message: `User Status Changed to ${newRole}` });
 });
