@@ -12,7 +12,7 @@ export const createTask = asyncHandler(async (req, res) => {
   const company = await Company.findOne({ _id: cId, status: "active" });
 
   if (!company) {
-    throw new ErrorHandler("Company does'nt exist or inactive", 404);
+    throw new ErrorHandler("Company doesn't exist or is inactive", 404);
   }
 
   const project = await Project.findOne({ _id: pId, companyId: company._id });
