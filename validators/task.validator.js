@@ -5,8 +5,8 @@ export const taskValidatorSchema = z.object({
   description: z.string().trim().optional(),
   priority: z.enum(["low", "medium", "high", "urgent"]).default("medium"),
   dueDate: z.coerce.date().optional(),
-  assignedTo: z
-    .string()
-    .regex(/^[0-9a-fA-F]{24}$/, "Invalid user ID")
-    .optional(),
+  //   assignedTo: z
+  //     .string()
+  //     .regex(/^[0-9a-fA-F]{24}$/, "Invalid user ID")
+  //     .optional(),
 });
