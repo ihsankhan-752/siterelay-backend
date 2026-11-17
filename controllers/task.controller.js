@@ -117,3 +117,77 @@ export const getTaskById = asyncHandler(async (req, res) => {
 
   return res.status(200).json({ success: true, tasks });
 });
+
+export const updateTaskInformation = asyncHandler(async (req, res) => {
+  const { cId, pId, taskId } = req.params;
+  const { title, description, priority, dueDate } = req.body;
+
+  const company = await Company.findOne({
+    _id: cId,
+    status: "active",
+  });
+
+  if (!company) {
+    throw new ErrorHandler("Company doesn't exist or is inactive", 404);
+  }
+
+  const project = await Project.findOne({
+    _id: pId,
+    companyId: company._id,
+  });
+
+  if (!project || project.status !== "planning") {
+    throw new ErrorHandler("Project doesn't exist", 404);
+  }
+
+  const projectMembership = await ProjectMembership.findOne({
+    projectId: project._id,
+    userId: req.user._id,
+    status: "active",
+    companyId: company._id,
+  });
+
+  if (!projectMembership) {
+    throw new ErrorHandler("Active project membership not found", 403);
+  }
+
+  if (projectMembership.role !== "project manager") {
+    throw new ErrorHandler("Only project managers can update tasks", 403);
+  }
+
+  const updateData = {};
+
+  if (title !== undefined) updateData.title = title;
+  if (description !== undefined) updateData.description = description;
+  if (priority !== undefined) updateData.priority = priority;
+  if (dueDate !== undefined) updateData.dueDate = dueDate;
+
+  if (Object.keys(updateData).length === 0) {
+    throw new ErrorHandler("At least one field is required to update", 400);
+  }
+
+  const updatedTask = await Task.findOneAndUpdate(
+    {
+      companyId: company._id,
+      projectId: project._id,
+      _id: taskId,
+    },
+    {
+      $set: updateData,
+    },
+    {
+      new: true,
+      runValidators: true,
+    },
+  );
+
+  if (!updatedTask) {
+    throw new ErrorHandler("Task doesn't exist", 404);
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: "Task updated successfully",
+    updatedTask,
+  });
+});
