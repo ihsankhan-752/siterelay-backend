@@ -10,3 +10,15 @@ export const taskValidatorSchema = z.object({
   //     .regex(/^[0-9a-fA-F]{24}$/, "Invalid user ID")
   //     .optional(),
 });
+
+export const updateTaskValidatorSchema = z
+  .object({
+    title: z.string().trim().min(3).optional(),
+    description: z.string().trim().optional(),
+    priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
+    dueDate: z.coerce.date().optional(),
+  })
+  .refine(
+    (data) => Object.keys(data).length > 0,
+    "At least one field is required to update",
+  );
