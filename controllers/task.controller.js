@@ -109,7 +109,7 @@ export const getTaskById = asyncHandler(async (req, res) => {
     throw new ErrorHandler("Active project membership not found", 403);
   }
 
-  const tasks = await Task.find({
+  const tasks = await Task.findOne({
     companyId: company._id,
     projectId: project._id,
     _id: taskId,
