@@ -80,6 +80,7 @@ export const getProjectTasks = asyncHandler(async (req, res) => {
   const tasks = await Task.find({
     companyId: company._id,
     projectId: project._id,
+    isDeleted: false,
   });
 
   return res.status(200).json({ success: true, tasks });
@@ -111,13 +112,18 @@ export const getTaskById = asyncHandler(async (req, res) => {
     throw new ErrorHandler("Active project membership not found", 403);
   }
 
-  const tasks = await Task.findOne({
+  const task = await Task.findOne({
     companyId: company._id,
     projectId: project._id,
     _id: taskId,
+    isDeleted: false,
   });
 
-  return res.status(200).json({ success: true, tasks });
+  if (!task) {
+    throw new ErrorHandler("Task doesn't exist", 404);
+  }
+
+  return res.status(200).json({ success: true, task });
 });
 
 export const updateTaskInformation = asyncHandler(async (req, res) => {
@@ -173,6 +179,7 @@ export const updateTaskInformation = asyncHandler(async (req, res) => {
       companyId: company._id,
       projectId: project._id,
       _id: taskId,
+      isDeleted: false,
     },
     {
       $set: updateData,
@@ -222,17 +229,18 @@ export const assignTask = asyncHandler(async (req, res) => {
   }
 
   if (projectMembership.role !== "project manager") {
-    throw new ErrorHandler("Only project managers can update tasks", 403);
+    throw new ErrorHandler("Only project managers can assign tasks", 403);
   }
 
   const task = await Task.findOne({
     _id: taskId,
     companyId: company._id,
     projectId: project._id,
+    isDeleted: false,
   });
 
   if (!task) {
-    throw new ErrorHandler("Task does'nt Exist", 404);
+    throw new ErrorHandler("Task doesn't Exist", 404);
   }
 
   const user = await User.findOne({ _id: userId, status: "active" });
@@ -241,39 +249,32 @@ export const assignTask = asyncHandler(async (req, res) => {
     throw new ErrorHandler("User doesn't exist or is inactive", 404);
   }
 
-  if (user) {
-    const existingUser = await Membership.findOne({
-      companyId: company._id,
-      userId: user._id,
-      status: "active",
-    });
+  const existingUser = await Membership.findOne({
+    companyId: company._id,
+    userId: user._id,
+    status: "active",
+  });
 
-    if (!existingUser) {
-      throw new ErrorHandler(
-        "User is not an active member of this company",
-        403,
-      );
-    }
-
-    const existingProjectMembership = await ProjectMembership.findOne({
-      companyId: company._id,
-      userId: user._id,
-      projectId: project._id,
-      status: "active",
-    });
-    if (!existingProjectMembership) {
-      throw new ErrorHandler(
-        "User is not an active member of this project",
-        403,
-      );
-    }
+  if (!existingUser) {
+    throw new ErrorHandler("User is not an active member of this company", 403);
   }
 
-  const assignTask = await Task.findOneAndUpdate(
+  const existingProjectMembership = await ProjectMembership.findOne({
+    companyId: company._id,
+    userId: user._id,
+    projectId: project._id,
+    status: "active",
+  });
+  if (!existingProjectMembership) {
+    throw new ErrorHandler("User is not an active member of this project", 403);
+  }
+
+  const updatedTask = await Task.findOneAndUpdate(
     {
       companyId: company._id,
       projectId: project._id,
       _id: taskId,
+      isDeleted: false,
     },
     {
       $set: {
@@ -285,7 +286,7 @@ export const assignTask = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json({ success: true, message: "Task Assigned", assignTask });
+    .json({ success: true, message: "Task Assigned", assignTask: updatedTask });
 });
 
 export const updateTaskStatus = asyncHandler(async (req, res) => {
@@ -330,6 +331,7 @@ export const updateTaskStatus = asyncHandler(async (req, res) => {
       companyId: company._id,
       projectId: project._id,
       _id: taskId,
+      isDeleted: false,
     },
     {
       $set: {
@@ -353,5 +355,67 @@ export const updateTaskStatus = asyncHandler(async (req, res) => {
   });
 });
 
+export const deleteTask = asyncHandler(async (req, res) => {
+  const { cId, pId, taskId } = req.params;
 
+  const company = await Company.findOne({
+    _id: cId,
+    status: "active",
+  });
 
+  if (!company) {
+    throw new ErrorHandler("Company doesn't exist or is inactive", 404);
+  }
+
+  const project = await Project.findOne({
+    _id: pId,
+    companyId: company._id,
+  });
+
+  if (!project || project.status !== "planning") {
+    throw new ErrorHandler("Project doesn't exist", 404);
+  }
+
+  const projectMembership = await ProjectMembership.findOne({
+    projectId: project._id,
+    userId: req.user._id,
+    status: "active",
+    companyId: company._id,
+  });
+
+  if (!projectMembership) {
+    throw new ErrorHandler("Active project membership not found", 403);
+  }
+
+  if (projectMembership.role !== "project manager") {
+    throw new ErrorHandler("Only project managers can delete tasks", 403);
+  }
+
+  const deletedTask = await Task.findOneAndUpdate(
+    {
+      companyId: company._id,
+      projectId: project._id,
+      _id: taskId,
+      isDeleted: false,
+    },
+    {
+      $set: {
+        isDeleted: true,
+      },
+    },
+    {
+      new: true,
+      runValidators: true,
+    },
+  );
+
+  if (!deletedTask) {
+    throw new ErrorHandler("Task doesn't exist", 404);
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: "Task Deleted successfully",
+    deletedTask,
+  });
+});
