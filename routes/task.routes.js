@@ -23,7 +23,6 @@ import {
 
 const router = express.Router();
 
-// Create Task
 router.post(
   "/companies/:cId/projects/:pId/tasks",
   authMiddleware,
@@ -32,7 +31,6 @@ router.post(
   createTask,
 );
 
-// Get Project Tasks
 router.get(
   "/companies/:cId/projects/:pId/tasks",
   authMiddleware,
@@ -40,7 +38,6 @@ router.get(
   getProjectTasks,
 );
 
-// Get Task By ID
 router.get(
   "/companies/:cId/projects/:pId/tasks/:taskId",
   authMiddleware,
@@ -48,7 +45,6 @@ router.get(
   getTaskById,
 );
 
-// Update Task Information
 router.patch(
   "/companies/:cId/projects/:pId/tasks/:taskId",
   authMiddleware,
@@ -57,7 +53,6 @@ router.patch(
   updateTaskInformation,
 );
 
-// Assign Task
 router.patch(
   "/companies/:cId/projects/:pId/tasks/:taskId/assign",
   authMiddleware,
@@ -66,7 +61,6 @@ router.patch(
   assignTask,
 );
 
-// Update Task Status
 router.patch(
   "/companies/:cId/projects/:pId/tasks/:taskId/status",
   authMiddleware,
@@ -75,7 +69,6 @@ router.patch(
   updateTaskStatus,
 );
 
-// Delete Task
 router.delete(
   "/companies/:cId/projects/:pId/tasks/:taskId",
   authMiddleware,
