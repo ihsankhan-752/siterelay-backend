@@ -22,3 +22,14 @@ export const updateTaskValidatorSchema = z
     (data) => Object.keys(data).length > 0,
     "At least one field is required to update",
   );
+
+export const updateTaskStatusValidatorSchema = z
+  .object({
+    status: z
+      .enum(["todo", "in_progress", "review", "completed"])
+      .default("todo"),
+  })
+  .refine(
+    (data) => Object.keys(data).length > 0,
+    "At least one field is required to update",
+  );
