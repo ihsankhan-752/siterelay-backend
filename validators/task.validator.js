@@ -26,3 +26,7 @@ export const updateTaskValidatorSchema = z
 export const updateTaskStatusValidatorSchema = z.object({
   status: z.enum(["todo", "in_progress", "review", "completed"]),
 });
+
+export const assignTaskValidatorSchema = z.object({
+  userId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid user ID"),
+});

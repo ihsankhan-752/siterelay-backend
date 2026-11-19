@@ -161,7 +161,7 @@ export const assignTask = asyncHandler(async (req, res) => {
 
 export const updateTaskStatus = asyncHandler(async (req, res) => {
   const { taskId } = req.params;
-  const { newStatus } = req.body;
+  const { status } = req.body;
 
   const updatedTask = await Task.findOneAndUpdate(
     {
@@ -172,7 +172,7 @@ export const updateTaskStatus = asyncHandler(async (req, res) => {
     },
     {
       $set: {
-        status: newStatus,
+        status,
       },
     },
     {
