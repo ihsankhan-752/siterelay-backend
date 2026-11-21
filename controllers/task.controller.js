@@ -22,7 +22,7 @@ export const createTask = asyncHandler(async (req, res) => {
 });
 
 export const getProjectTasks = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10, status, priority } = req.query;
+  const { page = 1, limit = 10, status, priority, search } = req.query;
 
   const skip = (page - 1) * limit;
 
@@ -38,6 +38,10 @@ export const getProjectTasks = asyncHandler(async (req, res) => {
 
   if (priority) {
     filter.priority = priority;
+  }
+
+  if (search) {
+    filter.title = { $regex: search, $options: "i" };
   }
 
   const tasks = await Task.find(filter)
