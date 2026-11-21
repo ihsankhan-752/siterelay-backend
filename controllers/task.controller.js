@@ -22,13 +22,32 @@ export const createTask = asyncHandler(async (req, res) => {
 });
 
 export const getProjectTasks = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 10 } = req.query;
+
+  const skip = (page - 1) * limit;
+
   const tasks = await Task.find({
+    companyId: req.company._id,
+    projectId: req.project._id,
+    isDeleted: false,
+  })
+    .skip(skip)
+    .limit(limit)
+    .sort({ createdAt: -1 });
+
+  const totalDocuments = await Task.countDocuments({
     companyId: req.company._id,
     projectId: req.project._id,
     isDeleted: false,
   });
 
-  return res.status(200).json({ success: true, tasks });
+  const totalPages = Math.ceil(totalDocuments / limit);
+
+  return res.status(200).json({
+    success: true,
+    tasks,
+    data: { limit: limit, totalPages: totalPages },
+  });
 });
 
 export const getTaskById = asyncHandler(async (req, res) => {
