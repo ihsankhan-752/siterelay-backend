@@ -22,24 +22,30 @@ export const createTask = asyncHandler(async (req, res) => {
 });
 
 export const getProjectTasks = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10 } = req.query;
+  const { page = 1, limit = 10, status, priority } = req.query;
 
   const skip = (page - 1) * limit;
 
-  const tasks = await Task.find({
+  const filter = {
     companyId: req.company._id,
     projectId: req.project._id,
     isDeleted: false,
-  })
+  };
+
+  if (status) {
+    filter.status = status;
+  }
+
+  if (priority) {
+    filter.priority = priority;
+  }
+
+  const tasks = await Task.find(filter)
     .skip(skip)
     .limit(limit)
     .sort({ createdAt: -1 });
 
-  const totalDocuments = await Task.countDocuments({
-    companyId: req.company._id,
-    projectId: req.project._id,
-    isDeleted: false,
-  });
+  const totalDocuments = await Task.countDocuments(filter);
 
   const totalPages = Math.ceil(totalDocuments / limit);
 
