@@ -1,6 +1,9 @@
 import express from "express";
 
-import { uploadAttachment } from "../controllers/attachment.controller.js";
+import {
+  uploadAttachment,
+  getAttachments,
+} from "../controllers/attachment.controller.js";
 
 import { authMiddleware } from "../middlewares/auth.middleware.js";
 import { verifyProjectAccess } from "../middlewares/project.access.middleware.js";
@@ -14,6 +17,13 @@ router.post(
   verifyProjectAccess("project manager"),
   upload.single("attachment"),
   uploadAttachment,
+);
+
+router.get(
+  "/companies/:cId/projects/:pId/tasks/:taskId/attachments",
+  authMiddleware,
+  verifyProjectAccess(),
+  getAttachments,
 );
 
 export default router;

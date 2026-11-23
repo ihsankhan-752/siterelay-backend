@@ -33,11 +33,36 @@ export const uploadAttachment = asyncHandler(async (req, res) => {
     size: file.size,
     secureUrl: file.path,
     publicId: file.filename,
-    resourceType: file.resource_type,
+    resourceType: file.mimetype.startsWith("image/") ? "image" : "raw",
   });
   return res.status(201).json({
     success: true,
     message: "Attachment Successfully Uploaded",
     attachment,
   });
+});
+
+export const getAttachments = asyncHandler(async (req, res) => {
+  const { taskId } = req.params;
+
+  const task = await Task.findOne({
+    companyId: req.company._id,
+    projectId: req.project._id,
+    _id: taskId,
+    isDeleted: false,
+  });
+
+  if (!task) {
+    throw new ErrorHandler("Task doesn't exist", 404);
+  }
+
+  const filters = {
+    companyId: req.company._id,
+    projectId: req.project._id,
+    taskId: task._id,
+  };
+
+  const attachments = await Attachment.find(filters);
+
+  return res.status(200).json({ success: true, attachments });
 });
