@@ -52,4 +52,9 @@ const attachmentSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+attachmentSchema.index({
+  companyId: 1,
+  projectId: 1,
+  taskId: 1,
+});
 export const Attachment = mongoose.model("Attachment", attachmentSchema);
