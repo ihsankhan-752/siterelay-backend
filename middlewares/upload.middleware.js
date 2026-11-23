@@ -1,4 +1,6 @@
 import multer from "multer";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import cloudinary from "../config/cloudinary.js";
 
 const allowedMimeTypes = [
   "application/pdf",
@@ -8,7 +10,18 @@ const allowedMimeTypes = [
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ];
 
-const storage = multer.memoryStorage();
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: async (req, file) => {
+    const isImage = file.mimetype.startsWith("image/");
+
+    return {
+      folder: "siterelay/task-attachments",
+      resource_type: isImage ? "image" : "raw",
+      public_id: `${Date.now()}-${file.originalname.replace(/\.[^/.]+$/, "")}`,
+    };
+  },
+});
 
 const upload = multer({
   storage,
