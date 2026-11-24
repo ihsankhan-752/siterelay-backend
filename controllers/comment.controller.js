@@ -58,3 +58,49 @@ export const getComments = asyncHandler(async (req, res) => {
 
   return res.status(200).json({ success: true, comments });
 });
+
+export const updateComment = asyncHandler(async (req, res) => {
+  const { commentId, taskId } = req.params;
+
+  const { updatedContent } = req.body;
+
+  const comment = await Comment.findOne({
+    _id: commentId,
+    companyId: req.company._id,
+    projectId: req.project._id,
+    taskId,
+  })
+    .where("userId")
+    .equals(req.user._id);
+
+  if (!comment) {
+    throw new ErrorHandler(
+      "No Comment Found or you are unable to modify someone else comment",
+      404,
+    );
+  }
+
+  const updatedComment = await Comment.findOneAndUpdate(
+    {
+      _id: commentId,
+      companyId: req.company._id,
+      projectId: req.project._id,
+      taskId,
+      userId: req.user._id,
+    },
+    {
+      $set: {
+        content: updatedContent,
+        isEdited: true,
+      },
+    },
+    {
+      new: true,
+      runValidators: true,
+    },
+  );
+
+  return res
+    .status(200)
+    .json({ success: true, message: "Comment Updated", updatedComment });
+});
