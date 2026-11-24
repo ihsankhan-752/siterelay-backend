@@ -104,3 +104,35 @@ export const updateComment = asyncHandler(async (req, res) => {
     .status(200)
     .json({ success: true, message: "Comment Updated", updatedComment });
 });
+
+export const deleteComment = asyncHandler(async (req, res) => {
+  const { commentId, taskId } = req.params;
+
+  const comment = await Comment.findOne({
+    _id: commentId,
+    companyId: req.company._id,
+    projectId: req.project._id,
+    taskId,
+  })
+    .where("userId")
+    .equals(req.user._id);
+
+  if (!comment) {
+    throw new ErrorHandler(
+      "No Comment Found or you are unable to delete someone else comment",
+      404,
+    );
+  }
+
+  const deletedComment = await Comment.findOneAndDelete({
+    _id: commentId,
+    companyId: req.company._id,
+    projectId: req.project._id,
+    taskId,
+    userId: req.user._id,
+  });
+
+  return res
+    .status(200)
+    .json({ success: true, message: "Comment Deleted", deletedComment });
+});
