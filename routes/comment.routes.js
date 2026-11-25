@@ -15,7 +15,7 @@ const router = express.Router();
 router.post(
   "/companies/:cId/projects/:pId/tasks/:taskId/comments",
   authMiddleware,
-  verifyProjectAccess(),     
+  verifyProjectAccess(),
   addComment,
 );
 
