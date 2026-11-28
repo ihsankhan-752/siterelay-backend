@@ -36,7 +36,7 @@ const progressReportRevisionSchema = new mongoose.Schema(
     },
     reviewStatus: {
       type: String,
-      enum: ["pending", "approved", "revision_requested"],
+      enum: ["pending", "approved", "revision_requested", "rejected"],
       default: "pending",
     },
     reviewComment: {

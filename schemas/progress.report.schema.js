@@ -24,6 +24,12 @@ const progressReportSchema = new mongoose.Schema(
       minlength: 3,
       maxlength: 150,
     },
+    resubmissionCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 1,
+    },
     progressPercentage: {
       type: Number,
       required: [true, "Progress percentage required"],
@@ -63,7 +69,13 @@ const progressReportSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["draft", "submitted", "revision_requested", "approved"],
+      enum: [
+        "draft",
+        "submitted",
+        "revision_requested",
+        "approved",
+        "rejected",
+      ],
       default: "draft",
     },
     reviewedBy: {
